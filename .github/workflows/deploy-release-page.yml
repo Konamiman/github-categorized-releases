@@ -1,0 +1,66 @@
+name: Deploy Release Page to GitHub Pages
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'Release name/title'
+        required: true
+        default: 'Manual Release'
+      release_url:
+        description: 'Release URL'
+        required: true
+        default: 'https://github.com'
+      release_tag:
+        description: 'Release tag'
+        required: true
+        default: 'v0.0.0'
+      release_body:
+        description: 'Release notes (optional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate HTML page
+        run: node .github/scripts/generate-release-page.js
+        env:
+          RELEASE_NAME: ${{ github.event.release.name || inputs.release_name }}
+          RELEASE_URL: ${{ github.event.release.html_url || inputs.release_url }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+          RELEASE_BODY: ${{ github.event.release.body || inputs.release_body }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
