@@ -1,0 +1,416 @@
+# =============================================================================
+# Categorized Releases Configuration
+#
+# Example demonstrating all the existing configuration keys.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DEFAULTS SECTION
+# -----------------------------------------------------------------------------
+# Default settings that apply to all categories. Categories inherit from these
+# defaults; subcategories inherit from their parent category.
+#
+# Value semantics for per-category overrides:
+#   - Omit the setting: inherit from parent (or defaults for top-level)
+#   - null: reset to the configured default (from this section)
+#   - false: disable the feature entirely
+#   - Explicit value: use that value
+
+defaults:
+  # "Latest" badge control
+  # Implicit value if not specified: newest
+  latest-match: newest                  # "newest" = newest release gets the latest badge
+                                        # false = no latest badge for any release
+                                        # Array of matchers = custom matching (see examples below)
+
+  # Hide older releases
+  # Implicit value if not specified: -1y (hide releases older than 1 year)
+  cutoff-date: -1y                      # Relative formats:
+                                        #   -Nd = N days ago (e.g., -30d)
+                                        #   -Nw = N weeks ago (e.g., -4w)
+                                        #   -Nm = N months ago (e.g., -6m)
+                                        #   -Ny = N years ago (e.g., -2y)
+                                        # ISO date: "2023-01-01" or "2023-01-01T00:00:00Z"
+                                        # false = no cutoff (show all releases)
+
+  # Maximum releases to display per category
+  # Implicit value if not specified: 100
+  max-displayed: 100                    # number = limit (shows warning banner with GitHub link)
+                                        # false = unlimited (show all matching releases)
+
+# -----------------------------------------------------------------------------
+# GLOBAL FILTERS (INCLUDE/EXCLUDE)
+# -----------------------------------------------------------------------------
+# Filter releases globally BEFORE category matching. Only releases that pass
+# these filters will be considered for any category.
+#
+# Processing order:
+#   1. Fetch releases (limited by site.max-releases)
+#   2. Apply include/exclude filters (this section)
+#   3. Match releases to categories
+#   4. Apply per-category max-displayed and cutoff-date
+#
+# Both include and exclude support the full matcher syntax,
+# see MATCHERS REFERENCE section below.
+#
+# Multiple matchers at the same level are combined with AND logic.
+# By default (if omitted): include matches all, exclude matches none.
+
+# Example: Only include version-tagged releases, exclude prereleases
+include:
+  tag: "^v\\d"                          # Tag must start with 'v' followed by digit
+
+exclude:
+  is-prerelease: true                   # Exclude all prereleases
+
+# Example with complex conditions:
+# include:
+#   match-any:
+#     - tag: "^v\\d"                    # Version tags
+#     - tag: "^release-"                # Or release- prefixed tags
+#   match-all:
+#     - title-not: "\\[DO NOT USE\\]"   # Must not have warning in title
+#
+# exclude:
+#   match-any:
+#     - is-prerelease: true             # Exclude prereleases
+#     - tag: "-alpha"                   # Or alpha versions
+#     - tag: "-beta"                    # Or beta versions
+
+# -----------------------------------------------------------------------------
+# PAGE SETTINGS
+# -----------------------------------------------------------------------------
+# Local file paths (favicon, style, content-file) can be absolute or relative.
+# Relative paths are resolved from the config file's directory.
+
+site:
+  title: "My Project Releases"                          # Required: site title
+  description: "Release history organized by component" # Optional: subtitle under title
+  favicon: https://example.com/favicon.ico              # Optional: URL or local path
+  style: custom.css                                     # Optional: custom CSS file (local or URL)
+                                                        #           appended to default styles
+  max-releases: 1000                                    # Optional: limit releases to process
+                                                        #           (from API or releases file)
+                                                        #           Default: 1000, false = unlimited
+  show-latest-only-toggle: true                         # Optional: show "Latest only" filter toggle
+                                                        #           Default: true
+
+  # Main page (Index) configuration
+  main-page:
+    render: true                                        # Enable the Index page (default: false)
+    content-file: MAIN.md                               # Optional: path to markdown file
+                                                        #           Default: MAIN.md
+    content: |                                          # Optional: inline markdown content
+      # Welcome                                         #           Takes priority over content-file
+      This is **inline content** for the main page.
+
+# -----------------------------------------------------------------------------
+# MULTI-PAGE MODE
+# -----------------------------------------------------------------------------
+# By default, the generator creates a single-page site with all releases
+# embedded in the HTML. For repositories with many releases, multi-page mode
+# splits releases into separate page files that are loaded on demand.
+# This improves the loading performance and adds pagination for large categories.
+
+multi-page:
+  enabled: true                                         # Enable multi-page mode (default: false)
+  page-size: 20                                         # Releases per page (default: 50)
+                                                        # Use false for unlimited (all releases on one page per category)
+
+# -----------------------------------------------------------------------------
+# UNMATCHED RELEASES
+# -----------------------------------------------------------------------------
+# Releases that don't match any category. Supports the same settings as
+# regular categories for consistency.
+
+unmatched:
+  show: true                            # Optional: show unmatched releases. Default: true
+  name: "Miscellaneous"                 # Optional: category name. Default: "Other"
+  max-displayed: 50                     # Optional: limit unmatched releases shown
+                                        #           Default: uses defaults.max-displayed
+  cutoff-date: -6m                      # Optional: hide older unmatched releases
+                                        #           Default: uses defaults.cutoff-date
+  latest-match: newest                  # Optional: control "latest" badge for unmatched
+                                        #           Default: uses defaults.latest-match
+
+# -----------------------------------------------------------------------------
+# MATCHERS REFERENCE
+# -----------------------------------------------------------------------------
+# Matchers are used in match-any, match-all, latest-match, and directly
+# on categories, the "unmatched" section, and global include/exclude sections.
+# 
+# All regex patterns are case-insensitive.
+#
+# SIMPLE MATCHERS:
+#   title: "regex"        - Match release title (name)
+#   tag: "regex"          - Match tag name
+#   body: "regex"         - Match release body/notes
+#   assets: "regex"       - Match asset names (excluding source code zips),
+#                           joined by newlines
+#   title-not: "regex"    - Exclude if title matches
+#   tag-not: "regex"      - Exclude if tag matches
+#   body-not: "regex"     - Exclude if body matches
+#   assets-not: "regex"   - Exclude if assets match
+#   is-prerelease: true   - Match prerelease flag (true/false)
+#   is-latest: true       - Match GitHub's "latest" flag (true/false)
+#
+# COMPOUND MATCHERS (can be nested):
+#   match-any: [...]      - At least one must match (OR logic)
+#   match-all: [...]      - All must match (AND logic)
+#
+# CATEGORY-LEVEL MATCHERS:
+# Simple matchers can be placed directly on a category (same level as "name").
+# They combine with AND logic, equivalent to placing them in match-all.
+#
+# When multiple matching options are used, they combine with AND:
+#   Result = (any of match-any) AND (all of match-all) AND (all direct matchers)
+
+# -----------------------------------------------------------------------------
+# CATEGORIES
+# -----------------------------------------------------------------------------
+
+categories:
+  # ===========================================================================
+  # EXAMPLE 1: Basic category with all matcher types
+  # ===========================================================================
+  - name: "Core Components"
+    tooltip: "Main application components"              # Optional: hover text in sidebar
+    description: |                                      # Optional: markdown shown above releases
+      Core components of the application.
+      Supports **full markdown** including:
+      - Lists
+      - [Links](https://example.com)
+      - `code`
+
+    # --- Positive matchers (OR logic) ---
+    match-any:
+      - title: "core"                   # Title contains "core" (case-insensitive)
+      - tag: "^v\\d+\\.\\d+\\.\\d+$"    # Tag matches semver pattern exactly
+      - body: "breaking change"         # Body contains "breaking change"
+      - assets: "\\.msi$"               # Has an MSI installer asset
+      - is-prerelease: false            # Is not a prerelease
+      - is-latest: true                 # Is marked as "latest" on GitHub
+
+    # --- Additional filters (AND logic, applied after match-any) ---
+    match-all:
+      - tag-not: "-(alpha|beta|rc)"     # Exclude alpha/beta/rc tags
+      - title-not: "deprecated"         # Exclude deprecated releases
+      - body-not: "DO NOT USE"          # Exclude releases with warning in body
+      - assets-not: "-debug\\.zip$"     # Exclude releases with debug assets
+
+    # This category uses inherited defaults (nothing specified)
+    # - latest-match: inherited from defaults.latest-match
+    # - cutoff-date: inherited from defaults.cutoff-date
+    # - max-displayed: inherited from defaults.max-displayed
+
+  # ===========================================================================
+  # EXAMPLE 2: Nested matchers (complex conditions)
+  # ===========================================================================
+  # Top-level match-any and match-all are combined with AND logic:
+  # Result = (any of match-any) AND (all of match-all)
+  - name: "Production Releases"
+    description: Examples of nested matchers for complex conditions.
+
+    # --- First: at least one of these must match (OR) ---
+    match-any:
+      # Simple condition: tagged as stable
+      - tag: "-stable$"
+
+      # Nested match-all inside match-any: (v2.x AND NOT prerelease)
+      - match-all:
+          - tag: "^v2\\."
+          - is-prerelease: false
+
+      # Nested match-any inside match-any: (mentions fix OR patch)
+      - match-any:
+          - title: "fix"
+          - title: "patch"
+
+    # --- Then: all of these must also be true (AND) ---
+    match-all:
+      # Nested match-any inside match-all: must have EITHER "tested" or "verified"
+      - match-any:
+          - body: "tested"
+          - body: "verified"
+
+      # Simple exclusion
+      - tag-not: "deprecated"
+
+    # Override: use custom latest-match with matchers
+    # When latest-match is an array, items are combined with AND logic.
+    # Use match-any or match-all explicitly for complex conditions.
+    latest-match:
+      match-any:
+        - tag: "-stable$"               # Stable releases can be "latest"
+        - match-all:                    # Or: v3.x non-prereleases
+            - tag: "^v3\\."
+            - is-prerelease: false
+
+  # ===========================================================================
+  # EXAMPLE 3: Settings inheritance demonstration
+  # ===========================================================================
+  - name: "Version 3.x"
+    description: |
+      Demonstrates inheritance of settings through the category tree.
+
+      This category sets custom values that subcategories will inherit.
+    match-any:
+      - tag: "^v3\\."
+
+    # --- Custom settings (override defaults) ---
+    latest-match: false                 # No latest badge in this category
+    cutoff-date: -6m                    # Only show releases from last 6 months
+    max-displayed: 50                   # Show max 50 releases
+
+    categories:
+      # -----------------------------------------------------------------------
+      # Subcategory that INHERITS parent settings
+      # -----------------------------------------------------------------------
+      - name: "Stable 3.x"
+        description: |
+          This subcategory inherits from parent:
+          - latest-match: false (from parent)
+          - cutoff-date: -6m (from parent)
+          - max-displayed: 50 (from parent)
+        match-any:
+          - is-prerelease: false
+        # No settings specified = inherits all from parent "Version 3.x"
+
+      # -----------------------------------------------------------------------
+      # Subcategory that OVERRIDES with custom values
+      # -----------------------------------------------------------------------
+      - name: "Beta 3.x"
+        description: |
+          This subcategory overrides parent settings with custom values.
+        match-any:
+          - is-prerelease: true
+        latest-match:                   # Override: custom latest matching
+          - tag: "-rc\\d+$"             # Only release candidates get latest badge
+        cutoff-date: -3m                # Override: shorter cutoff
+        max-displayed: 20               # Override: fewer releases shown
+
+      # -----------------------------------------------------------------------
+      # Subcategory that RESETS to configured defaults (using null)
+      # -----------------------------------------------------------------------
+      - name: "Critical 3.x"
+        description: |
+          This subcategory uses null to reset settings to configured defaults
+          (from the top-level defaults section), ignoring parent overrides.
+        match-any:
+          - title: "critical"
+          - title: "security"
+        latest-match: null              # Reset to defaults.latest-match (newest)
+        cutoff-date: null               # Reset to defaults.cutoff-date (-1y)
+        max-displayed: null             # Reset to defaults.max-displayed (100)
+
+      # -----------------------------------------------------------------------
+      # Subcategory that DISABLES features (using false)
+      # -----------------------------------------------------------------------
+      - name: "Archived 3.x"
+        description: |
+          This subcategory disables features using false.
+        match-any:
+          - title: "archived"
+          - body: "no longer maintained"
+        latest-match: false             # Disable: no latest badge
+        cutoff-date: false              # Disable: show ALL releases (no cutoff)
+        max-displayed: false            # Disable: show unlimited releases
+
+  # ===========================================================================
+  # EXAMPLE 4: Container category (no direct releases)
+  # ===========================================================================
+  - name: "Plugins"
+    tooltip: "Extension plugins"
+    description: |
+      This category has no matchers, so no releases appear directly here.
+      It serves as a container for organizing subcategories.
+
+    # No matchers = no direct releases, only subcategories contribute
+
+    categories:
+      - name: "Authentication Plugins"
+        match-any:
+          - tag: "-auth-"
+          - title: "auth"
+
+      - name: "Storage Plugins"
+        match-any:
+          - tag: "-storage-"
+          - title: "storage"
+
+        # Deeply nested categories
+        categories:
+          - name: "S3 Storage"
+            match-any:
+              - tag: "s3"
+              - title: "s3"
+
+          - name: "Local Storage"
+            match-any:
+              - tag: "local"
+              - title: "local-storage"
+
+  # ===========================================================================
+  # EXAMPLE 5: Direct matchers at category level
+  # ===========================================================================
+  # Simple matchers can be placed directly on the category (same level as "name").
+  # They combine with AND logic. This is the most concise syntax for simple cases.
+  - name: "Verified Production"
+    description: |
+      Direct matchers at category level: concise AND conditions.
+      All releases are candidates initially, then filtered by all matchers.
+    is-prerelease: false                # Must not be prerelease
+    tag-not: "-(alpha|beta|rc)"         # Must not have pre-release suffix
+    body: "verified"                    # Must contain "verified" in body
+
+  # ===========================================================================
+  # EXAMPLE 5b: Equivalent using match-all
+  # ===========================================================================
+  # This is functionally identical to Example 5 above
+  - name: "Verified Production (match-all)"
+    description: Same as above but using explicit match-all syntax.
+    match-all:
+      - is-prerelease: false
+      - tag-not: "-(alpha|beta|rc)"
+      - body: "verified"
+
+  # ===========================================================================
+  # EXAMPLE 6: Combining direct matchers with match-any
+  # ===========================================================================
+  # Direct matchers combine with match-any/match-all using AND logic.
+  - name: "Windows Releases"
+    description: |
+      Releases that match tag pattern AND have Windows assets.
+      Result = (any of match-any) AND (all direct matchers)
+    match-any:
+      - tag: "^v\\d"                    # Tag starts with v + digit
+      - title: "release"                # Or title contains "release"
+    assets: "\\.exe$|\\.msi$"           # AND must have Windows executable
+    is-prerelease: false                # AND must not be prerelease
+
+  # ===========================================================================
+  # EXAMPLE 7: Real-world kernel/beta pattern
+  # ===========================================================================
+  - name: "Kernel"
+    description: Core operating system kernel releases.
+    match-any:
+      - title: "kernel"
+      - tag: "-kernel"
+    match-all:
+      - tag-not: "-(alpha|beta|rc)"     # Exclude prereleases from main list
+      - is-prerelease: false
+
+    categories:
+      - name: "Kernel Beta"
+        description: Pre-release kernel versions for testing.
+        match-any:
+          - is-prerelease: true
+          - tag: "-(alpha|beta|rc)"
+        latest-match: false             # No latest badge for beta releases
+
+      - name: "Legacy Kernel"
+        description: Older kernel versions for compatibility.
+        match-any:
+          - tag: "v1\\.x"
+        cutoff-date: false              # Show all legacy releases regardless of age
+        max-displayed: false            # Show all of them

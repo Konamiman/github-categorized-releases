@@ -1,0 +1,29 @@
+{
+  "name": "github-categorized-releases",
+  "version": "1.0.0",
+  "description": "GitHub Action to generate a categorized releases page for GitHub repositories",
+  "author": "Konamiman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Konamiman/github-categorized-releases"
+  },
+  "keywords": [
+    "github-action",
+    "releases",
+    "github-pages",
+    "monorepo"
+  ],
+  "main": "src/generate-release-page.js",
+  "scripts": {
+    "generate": "node src/generate-release-page.js",
+    "test": "node src/generate-release-page.js --releases-file examples/sample-releases.json --config examples/config.yaml --output _site",
+    "help": "node src/generate-release-page.js --help"
+  },
+  "dependencies": {
+    "highlight.js": "^11.9.0",
+    "js-yaml": "^4.1.0",
+    "marked": "^15.0.0",
+    "marked-highlight": "^2.2.0"
+  }
+}
