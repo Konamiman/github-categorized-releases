@@ -1,0 +1,36 @@
+name: Update Major Version Tag
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  update-major-tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Extract major version and update tag
+        run: |
+          # Get the tag that triggered this workflow
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "Triggered by tag: $TAG"
+
+          # Extract major version (e.g., v1 from v1.2.3)
+          MAJOR=$(echo "$TAG" | grep -oE '^v[0-9]+')
+          echo "Major version: $MAJOR"
+
+          # Configure git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Clone just enough to update tags
+          git clone --bare "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" repo
+          cd repo
+
+          # Update the major version tag to point to the same commit as the full version tag
+          git tag -f "$MAJOR" "$TAG"
+          git push -f origin "$MAJOR"
+
+          echo "Updated $MAJOR to point to $TAG"
