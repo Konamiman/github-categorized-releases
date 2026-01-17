@@ -87,7 +87,15 @@ const SIMPLE_MATCHER_KEYS = [
   'is-prerelease', 'is-latest'
 ];
 
-function matchesCategory(release, category) {
+/**
+ * Check if a release matches a category's matchers
+ * @param {Object} release - The release object to test
+ * @param {Object} category - The category with matchers
+ * @param {boolean|undefined} parentMatches - Result of parent category's match (undefined if no parent)
+ * @param {boolean|string} inheritMode - How to combine with parent: false, true/"and", or "or"
+ * @returns {boolean}
+ */
+function matchesCategory(release, category, parentMatches = undefined, inheritMode = false) {
   const hasMatchAny = category['match-any'] && category['match-any'].length > 0;
   const hasMatchAll = category['match-all'] && category['match-all'].length > 0;
 
@@ -99,30 +107,50 @@ function matchesCategory(release, category) {
     }
   }
   const hasDirectMatchers = Object.keys(directMatchers).length > 0;
+  const hasOwnMatchers = hasMatchAny || hasMatchAll || hasDirectMatchers;
 
-  // No matchers defined = nothing matches (category is container-only)
-  if (!hasMatchAny && !hasMatchAll && !hasDirectMatchers) {
+  // Determine if we should inherit from parent
+  const shouldInherit = inheritMode && inheritMode !== false && parentMatches !== undefined;
+
+  // No own matchers defined
+  if (!hasOwnMatchers) {
+    // If inheriting from parent, container inherits parent's condition
+    if (shouldInherit) {
+      return parentMatches;
+    }
+    // Otherwise, container-only = nothing matches (current behavior)
     return false;
   }
 
-  let matches = true;
+  // Evaluate own matchers
+  let ownMatches = true;
 
   // match-any: at least one must match (OR logic)
   if (hasMatchAny) {
-    matches = category['match-any'].some(m => testMatcher(release, m));
+    ownMatches = category['match-any'].some(m => testMatcher(release, m));
   }
 
   // match-all: all must match (AND logic), applied after match-any
-  if (matches && hasMatchAll) {
-    matches = category['match-all'].every(m => testMatcher(release, m));
+  if (ownMatches && hasMatchAll) {
+    ownMatches = category['match-all'].every(m => testMatcher(release, m));
   }
 
   // Direct matchers: all must match (AND logic), applied after match-any/match-all
-  if (matches && hasDirectMatchers) {
-    matches = testMatcher(release, directMatchers);
+  if (ownMatches && hasDirectMatchers) {
+    ownMatches = testMatcher(release, directMatchers);
   }
 
-  return matches;
+  // If not inheriting, return own result
+  if (!shouldInherit) {
+    return ownMatches;
+  }
+
+  // Combine with parent based on inheritance mode
+  if (inheritMode === 'or') {
+    return parentMatches || ownMatches;
+  }
+  // true or "and": AND logic
+  return parentMatches && ownMatches;
 }
 
 /**
