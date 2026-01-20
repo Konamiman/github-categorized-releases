@@ -38,6 +38,12 @@ defaults:
   max-displayed: 100                    # number = limit (shows warning banner with GitHub link)
                                         # false = unlimited (show all matching releases)
 
+  # Inherit parent category's matchers
+  # Implicit value if not specified: false
+  inherit-parent-matchers: false        # false = don't inherit (just apply explicit matchers)
+                                        # true/"and" = (parent matchers) AND (own matchers)
+                                        # "or" = (parent matchers) OR (own matchers)
+
 # -----------------------------------------------------------------------------
 # GLOBAL FILTERS (INCLUDE/EXCLUDE)
 # -----------------------------------------------------------------------------
@@ -94,6 +100,15 @@ site:
                                                         #           Default: 1000, false = unlimited
   show-latest-only-toggle: true                         # Optional: show "Latest only" filter toggle
                                                         #           Default: true
+  hide-tag: hide-in-categorized-releases                # Optional: custom HTML tag for hidden content
+                                                        #           Content between <tag>...</tag> in release
+                                                        #           bodies is stripped before rendering.
+                                                        #           GitHub strips unknown tags, so content
+                                                        #           shows on GitHub but not on generated site.
+                                                        #           Include a blank line after opening tag for
+                                                        #           proper markdown rendering on GitHub.
+                                                        #           Default: "hide-in-categorized-releases"
+                                                        #           Use false to disable this feature.
 
   # Main page (Index) configuration
   main-page:
@@ -448,3 +463,96 @@ categories:
           - tag: "v1\\.x"
         cutoff-date: false              # Show all legacy releases regardless of age
         max-displayed: false            # Show all of them
+
+  # ===========================================================================
+  # EXAMPLE 8: Matcher inheritance
+  # ===========================================================================
+  # The inherit-parent-matchers setting allows child categories to automatically
+  # inherit their parent's matching conditions. This is useful when subcategories
+  # should only match releases that ALSO match the parent category.
+  #
+  # Without inheritance: each category's matchers are evaluated independently.
+  # With inheritance: effective match = (parent result) AND/OR (child matchers)
+  #
+  # Note: A container (no matchers) evaluates to false, so inheriting from a
+  # container with OR means only the child's own matchers apply.
+  #
+  # Use show-releases: false to define matchers for inheritance without showing
+  # releases directly in the parent category (only children will display them).
+
+  - name: "Version 2.x"
+    description: |
+      All version 2.x releases. Subcategories inherit this tag requirement.
+      This parent doesn't show releases directly - only children do.
+    tag: "^v2\\."
+    inherit-parent-matchers: true       # Enable inheritance for this subtree
+    show-releases: false                # Don't show releases here, only in children
+
+    categories:
+      # -----------------------------------------------------------------------
+      # Child inherits parent matchers (AND logic by default)
+      # -----------------------------------------------------------------------
+      - name: "Stable 2.x"
+        description: |
+          Effective matchers: tag "^v2\\." AND is-prerelease: false
+          (inherits parent's tag matcher)
+        is-prerelease: false
+        # No inherit-parent-matchers = inherits "true" from parent
+
+      # -----------------------------------------------------------------------
+      # Another child with different additional matchers
+      # -----------------------------------------------------------------------
+      - name: "Beta 2.x"
+        description: |
+          Effective matchers: tag "^v2\\." AND is-prerelease: true
+        is-prerelease: true
+
+      # -----------------------------------------------------------------------
+      # Breaking inheritance chain
+      # -----------------------------------------------------------------------
+      - name: "Special Releases"
+        description: |
+          This category breaks the inheritance chain. It does NOT require
+          releases to match the parent's "^v2\\." tag pattern.
+          Only releases with "special" in the body will match.
+        inherit-parent-matchers: false  # Break inheritance
+        body: "special"
+
+      # -----------------------------------------------------------------------
+      # Using OR logic instead of AND
+      # -----------------------------------------------------------------------
+      - name: "Extended 2.x"
+        description: |
+          Effective matchers: tag "^v2\\." OR body "2\\.x compatible"
+          Matches v2.x releases OR releases marked as 2.x compatible.
+        inherit-parent-matchers: "or"
+        body: "2\\.x compatible"
+
+      # -----------------------------------------------------------------------
+      # Deeply nested categories (transitive inheritance)
+      # -----------------------------------------------------------------------
+      - name: "Platform-specific 2.x"
+        description: Container for platform-specific releases.
+        # No own matchers = inherits parent's condition (tag "^v2\\.")
+
+        categories:
+          - name: "Windows 2.x"
+            description: |
+              Effective matchers: tag "^v2\\." AND assets "\\.exe$"
+              (inherits from grandparent through parent)
+            assets: "\\.exe$"
+
+          - name: "Linux 2.x"
+            description: |
+              Effective matchers: tag "^v2\\." AND assets "\\.deb$|\\.rpm$"
+            assets: "\\.deb$|\\.rpm$"
+
+      # -----------------------------------------------------------------------
+      # Resetting to default (null)
+      # -----------------------------------------------------------------------
+      - name: "Independent 2.x"
+        description: |
+          Using null resets to the configured default (false).
+          This category does NOT inherit parent matchers.
+        inherit-parent-matchers: null   # Reset to default (false)
+        title: "independent"            # Only matches releases with "independent" in title

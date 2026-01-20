@@ -445,15 +445,24 @@ By default, a "Latest" badge will be shown for the most recent release in each c
 
 ### Category settings defaults and inheritance
 
-The `latest-match`, `cutoff-date` and `max-displayed` per-category configuration keys are actually inherited by nested categories, and there are defaults that are applied to categories that don't explicitly override the values and don't have any parent value to inherit. The rules are as follows:
+The `latest-match`, `cutoff-date`, `max-displayed`, and `inherit-parent-matchers` per-category configuration keys are actually inherited by nested categories, and there are defaults that are applied to categories that don't explicitly override the values and don't have any parent value to inherit. The rules are as follows:
 
 - There's an optional `defaults` section that allows you to define default values for these keys.
-- If not explicitly included in `defaults`, the implicit values are: `latest-match` = `newest`, `max-displayed` = `100`, `cutoff-date` = `-1y` (one year from current date).
+- If not explicitly included in `defaults`, the implicit values are: `latest-match` = `newest`, `max-displayed` = `100`, `cutoff-date` = `-1y` (one year from current date), `inherit-parent-matchers` = `false`.
 - A category that doesn't define an explicit value for these keys will inherit the value from the parent category (top-level categories inherit the defaults instead).
 - When a category defines an explicit value for these keys, its nested categories inherit it.
 - When a category sets one of these keys to `null`, its value reverts to the default.
 
-See [config.example.yaml](config.example.yaml) for a full inheritance example.
+The `inherit-parent-matchers` setting controls whether a category's matchers are combined with its parent's matchers:
+- `false` (default): The category's matchers are evaluated independently.
+- `true` or `"and"`: The category matches only if BOTH the parent's matchers AND the category's own matchers match.
+- `"or"`: The category matches if EITHER the parent's matchers OR the category's own matchers match.
+
+Note that a container category (one with no matchers) evaluates to `false` for all releases, so inheriting from a container with OR means only the child's own matchers apply.
+
+This is useful when you have a parent category like "Version 2.x" with `tag: "^v2\\."` and want all subcategories to automatically inherit this requirement without repeating it.
+
+See [config.example.yaml](config.example.yaml) for full inheritance examples.
 
 
 ### Single-page vs multi-page
@@ -482,6 +491,29 @@ The page offers two display modes:
 - **Assets**: Shows a table of downloadable files from all latest releases, excluding source code archives. Assets can be sorted by date (ascending/descending) or name (A-Z/Z-A). Duplicate filenames across releases show only the most recent version.
 
 Note: Which releases are marked as "latest" is determined by the `latest-match` setting in each category. By default, this is the newest release in each category.
+
+
+### Hiding content from the generated site
+
+You can include content in release bodies that will be visible on GitHub but hidden on the generated site. This is useful for adding links to the categorized releases page itself, or other metadata that shouldn't appear on the generated site.
+
+Wrap the content in a custom HTML tag (default: `hide-in-categorized-releases`):
+
+```markdown
+Check out the [categorized releases page](https://example.com/releases)!
+
+<hide-in-categorized-releases>
+
+[View this release in the categorized releases page](https://example.com/releases#v1.0.0)
+
+</hide-in-categorized-releases>
+```
+
+GitHub strips unknown HTML tags when rendering markdown, so the content between the tags will be visible on GitHub. The script strips this content before rendering, so it won't appear on the generated site.
+
+**Important**: Include a blank line after the opening tag so GitHub properly renders the content as proper HTML. Without the blank line, GitHub will simply output the raw content.
+
+You can customize the tag name via `site.hide-tag` in the config file, or set it to `false` to disable this feature.
 
 
 ## GitHub markdown rendering

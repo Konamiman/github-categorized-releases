@@ -15,6 +15,28 @@ const {
   loadJs
 } = require('./lib/html-generator');
 
+/**
+ * Strip content between hide tags from release bodies.
+ * The tags are custom HTML-like tags (e.g., <hide-in-categorized-releases>...</hide-in-categorized-releases>)
+ * that are stripped by GitHub when rendering but preserved in raw body.
+ * @param {Array} releases - Array of release objects
+ * @param {string} hideTag - The tag name to look for
+ * @returns {Array} - Releases with stripped bodies
+ */
+function stripHiddenContent(releases, hideTag) {
+  if (!hideTag) return releases;
+
+  // Escape special regex characters in tag name
+  const escapedTag = hideTag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Match <tag>...</tag> including multiline content (non-greedy)
+  const regex = new RegExp(`<${escapedTag}>[\\s\\S]*?</${escapedTag}>`, 'gi');
+
+  return releases.map(release => ({
+    ...release,
+    body: release.body ? release.body.replace(regex, '') : release.body
+  }));
+}
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -174,6 +196,12 @@ async function main() {
   let releases = releaseData.releases;
 
   console.log(`Found ${releaseData.totalCount} releases, fetched ${releaseData.listedCount}`);
+
+  // Strip hidden content from release bodies
+  const hideTag = (config.site && config.site['hide-tag']) ?? 'hide-in-categorized-releases';
+  if (hideTag !== false) {
+    releases = stripHiddenContent(releases, hideTag);
+  }
 
   // Apply global include/exclude filters
   const includeFilter = config.include;
