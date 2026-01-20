@@ -1,3 +1,5 @@
 node_modules/
-_site/
+_site*/
+config-*.yaml
+releases-*.yaml
 *.zip
