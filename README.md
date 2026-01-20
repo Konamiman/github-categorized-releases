@@ -474,6 +474,29 @@ The root `multi-page` section allows enabling multi-page site generation. In thi
 Note that since pages will be loaded via JavaScript, multi-page sites can't be loaded locally via browser's "Open file" (these sites need to be served by a web server).
 
 
+### Hiding content from the generated site
+
+You can include content in release bodies that will be visible on GitHub but hidden on the generated site. This is useful for adding links to the categorized releases page itself, or other metadata that shouldn't appear on the generated site.
+
+Wrap the content in a custom HTML tag (default: `hide-in-categorized-releases`):
+
+```markdown
+Check out the [categorized releases page](https://example.com/releases)!
+
+<hide-in-categorized-releases>
+
+[View this release in the categorized releases page](https://example.com/releases#v1.0.0)
+
+</hide-in-categorized-releases>
+```
+
+GitHub strips unknown HTML tags when rendering markdown, so the content between the tags will be visible on GitHub. The script strips this content before rendering, so it won't appear on the generated site.
+
+**Important**: Include a blank line after the opening tag so GitHub properly renders the content as proper HTML. Without the blank line, GitHub will simply output the raw content.
+
+You can customize the tag name via `site.hide-tag` in the config file, or set it to `false` to disable this feature.
+
+
 ## GitHub markdown rendering
 
 By default, the script uses a local markdown renderer ([marked](https://www.npmjs.com/package/marked)) to convert release descriptions to HTML. This is fast but may not render some GitHub-specific markdown features correctly (e.g., certain emoji shortcodes, special syntax extensions).
