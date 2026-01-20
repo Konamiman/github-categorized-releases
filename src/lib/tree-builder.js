@@ -138,7 +138,8 @@ function classifyReleases(releases, categories, defaults = {}, unmatchedConfig =
   const configuredDefaults = {
     latestMatch: defaults.latestMatch !== undefined ? defaults.latestMatch : 'newest',
     cutoffDate: defaults.cutoffDate !== undefined ? parseCutoffDate(defaults.cutoffDate) : parseCutoffDate('-1y'),
-    maxDisplayed: defaults.maxDisplayed !== undefined ? defaults.maxDisplayed : 100
+    maxDisplayed: defaults.maxDisplayed !== undefined ? defaults.maxDisplayed : 100,
+    inheritParentMatchers: defaults.inheritParentMatchers !== undefined ? defaults.inheritParentMatchers : false
   };
 
   // Validate defaults.max-displayed
@@ -165,11 +166,12 @@ function classifyReleases(releases, categories, defaults = {}, unmatchedConfig =
     return nodeValue;
   }
 
-  function processNode(node, inheritedLatestMatch, inheritedCutoffDate, inheritedMaxDisplayed) {
+  function processNode(node, inheritedLatestMatch, inheritedCutoffDate, inheritedMaxDisplayed, inheritedInheritMode, parentReleaseMatches) {
     // Resolve effective values using new inheritance semantics
     const hasLatestMatch = Object.hasOwn(node, 'latest-match');
     const hasCutoffDate = Object.hasOwn(node, 'cutoff-date');
     const hasMaxDisplayed = Object.hasOwn(node, 'max-displayed');
+    const hasInheritParentMatchers = Object.hasOwn(node, 'inherit-parent-matchers');
 
     // Validate category max-displayed if explicitly set
     if (hasMaxDisplayed) {
@@ -204,6 +206,14 @@ function classifyReleases(releases, categories, defaults = {}, unmatchedConfig =
       effectiveMaxDisplayed = null;
     }
 
+    // Resolve inherit-parent-matchers setting
+    const effectiveInheritMode = resolveValue(
+      node['inherit-parent-matchers'],
+      inheritedInheritMode,
+      configuredDefaults.inheritParentMatchers,
+      hasInheritParentMatchers
+    );
+
     const result = {
       name: node.name,
       description: node.description || '',
@@ -214,9 +224,24 @@ function classifyReleases(releases, categories, defaults = {}, unmatchedConfig =
     };
 
     // Find releases matching this category (clone each to avoid shared state)
+    // Track match results for each release to pass to subcategories
+    const releaseMatchResults = new Map();
+
+    // show-releases: false means evaluate matchers (for inheritance) but don't display releases
+    const showReleases = node['show-releases'] !== false;
+
     for (const release of releases) {
-      if (matchesCategory(release, node)) {
-        result.releases.push({ ...release, isLatest: false });
+      // Get parent's match result for this release (undefined if no parent)
+      const parentMatch = parentReleaseMatches ? parentReleaseMatches.get(release.id) : undefined;
+
+      // Evaluate this category's match, considering inheritance
+      const matches = matchesCategory(release, node, parentMatch, effectiveInheritMode);
+      releaseMatchResults.set(release.id, matches);
+
+      if (matches) {
+        if (showReleases) {
+          result.releases.push({ ...release, isLatest: false });
+        }
         matchedReleaseIds.add(release.id);
       }
     }
@@ -246,17 +271,24 @@ function classifyReleases(releases, categories, defaults = {}, unmatchedConfig =
       });
     }
 
-    // Process subcategories (pass inherited values)
+    // Process subcategories (pass inherited values and this category's match results)
     if (node.categories) {
       for (const subCategory of node.categories) {
-        result.categories.push(processNode(subCategory, effectiveLatestMatch, effectiveCutoffDate, effectiveMaxDisplayed));
+        result.categories.push(processNode(
+          subCategory,
+          effectiveLatestMatch,
+          effectiveCutoffDate,
+          effectiveMaxDisplayed,
+          effectiveInheritMode,
+          releaseMatchResults
+        ));
       }
     }
 
     return result;
   }
 
-  const tree = categories.map(c => processNode(c, undefined, undefined, undefined));
+  const tree = categories.map(c => processNode(c, undefined, undefined, undefined, undefined, undefined));
 
   // Filter out empty categories (no releases directly or in any subcategory)
   function filterEmptyCategories(cats) {
