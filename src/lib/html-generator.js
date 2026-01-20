@@ -790,8 +790,9 @@ async function generateFullHtml(tree, unmatchedReleases, config, defaultMaxDispl
       <div class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
-            <path d="M1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0ZM8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM8 4a.75.75 0 0 1 .75.75v2.69l1.78 1.78a.75.75 0 1 1-1.06 1.06l-2-2a.75.75 0 0 1-.22-.53V4.75A.75.75 0 0 1 8 4Z"></path>
-            <path d="M2.5 1.75a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0 .75.75h2.5a.75.75 0 0 0 0-1.5H3.31A7.954 7.954 0 0 1 8 2c.424 0 .84.033 1.246.098a.75.75 0 0 0 .258-1.478A9.448 9.448 0 0 0 8 .5a9.44 9.44 0 0 0-5.5 1.77V1.75Z"></path>
+            <path fill="currentColor" d="M8 1a7 7 0 0 1 7 7h-1.5A5.5 5.5 0 0 0 8 2.5V1Zm7 7a7 7 0 0 1-7 7v-1.5A5.5 5.5 0 0 0 13.5 8H15ZM8 15a7 7 0 0 1-7-7h1.5A5.5 5.5 0 0 0 8 13.5V15Z"/>
+            <path fill="currentColor" d="M8 4a.75.75 0 0 1 .75.75v2.69l1.78 1.78a.75.75 0 1 1-1.06 1.06l-2-2a.75.75 0 0 1-.22-.53V4.75A.75.75 0 0 1 8 4Z"/>
+            <path fill="currentColor" d="M2.5 3.5 5.5 8H-.5Z"/>
           </svg>
         </span>
         <span class="nav-name">${escapeHtml(latestPageTitle)}</span>
@@ -1197,8 +1198,9 @@ async function prepareMultiPageData(tree, unmatchedReleases, config, defaultMaxD
       <div class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
-            <path d="M1.5 8a6.5 6.5 0 1 1 13 0 6.5 6.5 0 0 1-13 0ZM8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM8 4a.75.75 0 0 1 .75.75v2.69l1.78 1.78a.75.75 0 1 1-1.06 1.06l-2-2a.75.75 0 0 1-.22-.53V4.75A.75.75 0 0 1 8 4Z"></path>
-            <path d="M2.5 1.75a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0 .75.75h2.5a.75.75 0 0 0 0-1.5H3.31A7.954 7.954 0 0 1 8 2c.424 0 .84.033 1.246.098a.75.75 0 0 0 .258-1.478A9.448 9.448 0 0 0 8 .5a9.44 9.44 0 0 0-5.5 1.77V1.75Z"></path>
+            <path fill="currentColor" d="M8 1a7 7 0 0 1 7 7h-1.5A5.5 5.5 0 0 0 8 2.5V1Zm7 7a7 7 0 0 1-7 7v-1.5A5.5 5.5 0 0 0 13.5 8H15ZM8 15a7 7 0 0 1-7-7h1.5A5.5 5.5 0 0 0 8 13.5V15Z"/>
+            <path fill="currentColor" d="M8 4a.75.75 0 0 1 .75.75v2.69l1.78 1.78a.75.75 0 1 1-1.06 1.06l-2-2a.75.75 0 0 1-.22-.53V4.75A.75.75 0 0 1 8 4Z"/>
+            <path fill="currentColor" d="M2.5 3.5 5.5 8H-.5Z"/>
           </svg>
         </span>
         <span class="nav-name">${escapeHtml(latestPageTitle)}</span>
