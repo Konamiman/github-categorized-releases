@@ -33,15 +33,15 @@ function copyDirRecursive(src, dest) {
   }
 }
 
-async function generateMultiPageSite(outputDir, tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed) {
+async function generateMultiPageSite(outputDir, tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed, latestReleases, latestAssets) {
   const pageSize = CONFIG.multiPage.pageSize;
 
   // Generate main index.html with sidebar
-  const indexHtml = await generateMultiPageIndex(tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed);
+  const indexHtml = await generateMultiPageIndex(tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed, latestReleases, latestAssets);
   fs.writeFileSync(path.join(outputDir, 'index.html'), indexHtml);
 
   // Generate pages for each category
-  await generateCategoryPages(outputDir, tree, unmatchedReleases, config, pageSize, defaultMaxDisplayed, unmatchedMaxDisplayed);
+  await generateCategoryPages(outputDir, tree, unmatchedReleases, config, pageSize, defaultMaxDisplayed, unmatchedMaxDisplayed, latestReleases, latestAssets);
 }
 
 // ============================================================================
@@ -222,6 +222,49 @@ async function main() {
     listedReleases.set(r.id, r);
   }
 
+  // Collect all releases marked as isLatest from tree + unmatched
+  function collectLatestReleases(categories, latestMap) {
+    for (const cat of categories) {
+      for (const r of cat.releases) {
+        if (r.isLatest) latestMap.set(r.id, r);
+      }
+      if (cat.categories) collectLatestReleases(cat.categories, latestMap);
+    }
+  }
+
+  const latestReleasesMap = new Map();
+  collectLatestReleases(tree, latestReleasesMap);
+  for (const r of unmatchedReleases) {
+    if (r.isLatest) latestReleasesMap.set(r.id, r);
+  }
+
+  // Sort by date descending
+  const latestReleases = Array.from(latestReleasesMap.values())
+    .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+
+  // Extract deduplicated assets (most recent release wins for duplicate names)
+  function extractDeduplicatedAssets(releases) {
+    const assetMap = new Map();
+    for (const release of releases) {
+      for (const asset of (release.assets || [])) {
+        if (asset.isSourceCode) continue;
+        if (!assetMap.has(asset.name)) {
+          assetMap.set(asset.name, {
+            name: asset.name,
+            url: asset.url,
+            size: asset.size,
+            releaseDate: release.publishedAt,
+            releaseUrl: release.url,
+            releaseTitle: release.name
+          });
+        }
+      }
+    }
+    return Array.from(assetMap.values());
+  }
+
+  const latestAssets = extractDeduplicatedAssets(latestReleases);
+
   // Find oldest listed release (by publishedAt date)
   let oldestListed = null;
   for (const r of listedReleases.values()) {
@@ -244,6 +287,9 @@ async function main() {
   };
 
   console.log(`Listing ${listedReleases.size} releases, unmatched: ${unmatchedReleases.length}`);
+  if (latestReleases.length > 0) {
+    console.log(`Latest releases: ${latestReleases.length}, unique assets: ${latestAssets.length}`);
+  }
 
   // Validate local favicon exists before starting generation
   if (CONFIG.faviconPath && !fs.existsSync(CONFIG.faviconPath)) {
@@ -261,10 +307,10 @@ async function main() {
 
     if (isMultiPage) {
       // Multi-page mode: generate index.html + category page files
-      await generateMultiPageSite(tempDir, tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed);
+      await generateMultiPageSite(tempDir, tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed, latestReleases, latestAssets);
     } else {
       // Single-page mode: generate single index.html with all content
-      fs.writeFileSync(path.join(tempDir, 'index.html'), await generateFullHtml(tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed));
+      fs.writeFileSync(path.join(tempDir, 'index.html'), await generateFullHtml(tree, unmatchedReleases, config, defaultMaxDisplayed, unmatchedMaxDisplayed, latestReleases, latestAssets));
     }
 
     fs.writeFileSync(path.join(tempDir, 'style.css'), await loadCss(config));

@@ -70,6 +70,7 @@ function doSelectCategoryFull(categoryId, html) {
   const wasAlreadySelected = currentCategoryId === categoryId;
   updateSidebarSelection(categoryId, wasAlreadySelected);
   currentCategoryId = categoryId;
+  document.body.classList.toggle('latest-page-active', categoryId === 'latest-page');
   doSelectCategory(categoryId, html);
 }
 

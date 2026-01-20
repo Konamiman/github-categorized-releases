@@ -118,6 +118,40 @@ multi-page:
                                                         # Use false for unlimited (all releases on one page per category)
 
 # -----------------------------------------------------------------------------
+# LATEST PAGE
+# -----------------------------------------------------------------------------
+# A special page aggregating all releases marked as "latest" across categories.
+# This provides a quick overview of the most recent stable releases.
+# Note: "latest" releases are determined by the latest-match setting in each
+# category (defaults to newest release per category).
+
+latest-page:
+  enable: true                                          # Enable the latest page (default: false)
+  title: "Latest Releases"                              # Optional: page title (default: "Latest")
+  description: |                                        # Optional: markdown description shown above releases
+    Browse the most recent releases across all categories.
+
+    **Display modes:**
+    - **Releases**: Full release cards with details
+    - **Assets**: Downloadable files sorted by date or name
+
+  # --- Releases pagination (overrides global defaults) ---
+  max-displayed: 50                                     # Optional: max releases to show
+                                                        #   Omit: use defaults.max-displayed
+                                                        #   false: unlimited
+  page-size: 10                                         # Optional: releases per page (multi-page mode)
+                                                        #   Omit: use multi-page.page-size
+                                                        #   false: unlimited (all on one page)
+
+  # --- Assets pagination ---
+  assets-max-displayed: 100                             # Optional: max assets to show
+                                                        #   Omit: use max-displayed (from this section or defaults)
+                                                        #   false: unlimited
+  assets-page-size: 25                                  # Optional: assets per page (multi-page mode)
+                                                        #   Omit: use page-size (from this section or multi-page)
+                                                        #   false: unlimited (all on one page)
+
+# -----------------------------------------------------------------------------
 # UNMATCHED RELEASES
 # -----------------------------------------------------------------------------
 # Releases that don't match any category. Supports the same settings as

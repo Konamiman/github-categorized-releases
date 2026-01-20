@@ -2,6 +2,15 @@
 // Common functionality shared between single-page and multi-page modes
 // ============================================================================
 
+// Format bytes to human-readable size
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
 let currentCategoryId = null;
 const collapsedReleases = new Set();
 
@@ -481,6 +490,9 @@ function formatDates() {
       el.textContent = date.toLocaleDateString(undefined, dateOptions);
     }
   }
+
+  // Also format dates in latest assets table
+  formatLatestAssetsDates();
 }
 
 // Theme toggle functionality
@@ -536,4 +548,78 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initThemeToggle);
 } else {
   initThemeToggle();
+}
+
+// ============================================================================
+// Latest Page Display Modes
+// ============================================================================
+
+let currentLatestDisplayMode = 'releases';
+
+function setLatestDisplayMode(mode) {
+  currentLatestDisplayMode = mode;
+
+  // Update button active states
+  const buttons = document.querySelectorAll('.display-mode-btn');
+  buttons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  // Toggle views
+  const releasesView = document.querySelector('.latest-releases-view');
+  const assetsView = document.querySelector('.latest-assets-view');
+
+  if (mode === 'releases') {
+    if (releasesView) releasesView.style.display = 'block';
+    if (assetsView) assetsView.style.display = 'none';
+  } else {
+    if (releasesView) releasesView.style.display = 'none';
+    if (assetsView) assetsView.style.display = 'block';
+    sortLatestAssets(mode);
+  }
+
+  // Update URL params
+  if (typeof updateUrlParams === 'function') {
+    updateUrlParams();
+  }
+}
+
+function sortLatestAssets(mode) {
+  const tbody = document.querySelector('.latest-assets-table tbody');
+  if (!tbody) return;
+
+  const rows = Array.from(tbody.querySelectorAll('.latest-asset-row'));
+  if (rows.length === 0) return;
+
+  rows.sort((a, b) => {
+    switch (mode) {
+      case 'assets-date-desc':
+        return new Date(b.dataset.date) - new Date(a.dataset.date);
+      case 'assets-date-asc':
+        return new Date(a.dataset.date) - new Date(b.dataset.date);
+      case 'assets-name-asc':
+        return a.dataset.name.localeCompare(b.dataset.name);
+      case 'assets-name-desc':
+        return b.dataset.name.localeCompare(a.dataset.name);
+      default:
+        return 0;
+    }
+  });
+
+  // Re-append in sorted order
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+function formatLatestAssetsDates() {
+  const elements = document.querySelectorAll('.latest-assets-table .date-value[data-date]');
+  const dateOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i];
+    const isoDate = el.dataset.date;
+    if (isoDate && !el.textContent) {
+      const date = new Date(isoDate);
+      el.textContent = date.toLocaleDateString(undefined, dateOptions);
+    }
+  }
 }

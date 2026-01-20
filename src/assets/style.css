@@ -251,6 +251,22 @@ body {
   margin-right: 4px;
 }
 
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  color: var(--text-secondary);
+}
+
+.nav-icon .octicon {
+  fill: currentColor;
+  width: 14px;
+  height: 14px;
+}
+
 .nav-toggle .chevron {
   fill: var(--text-secondary);
   transition: transform 0.2s;
@@ -265,6 +281,11 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.nav-item[data-category-id="index"] .nav-name,
+.nav-item[data-category-id="latest-page"] .nav-name {
+  font-weight: 600;
 }
 
 .nav-count {
@@ -1299,6 +1320,174 @@ body.hide-assets .assets {
   font-size: 14px;
 }
 
+/* ============================================================================
+   Latest Page Display Modes
+   ============================================================================ */
+
+.latest-display-modes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+}
+
+.display-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-color);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.display-mode-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-color);
+  border-color: var(--text-secondary);
+}
+
+.display-mode-btn.active {
+  background: var(--link-color);
+  border-color: var(--link-color);
+  color: white;
+}
+
+.display-mode-btn .octicon {
+  fill: currentColor;
+}
+
+.display-mode-divider {
+  color: var(--border-color);
+  margin: 0 4px;
+}
+
+.latest-releases-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.latest-releases-view .badge.latest {
+  display: none;
+}
+
+/* Hide "Show latest only" and "Show assets" filters on Latest page */
+body.latest-page-active label.filter-toggle:has(#showLatestOnly),
+body.latest-page-active .filter-group:has(#showAssets) {
+  display: none;
+}
+
+.display-mode-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Latest Assets Table */
+.latest-assets-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.latest-assets-table thead {
+  background: var(--bg-secondary);
+}
+
+.latest-assets-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.latest-assets-table th:first-child {
+  width: 32px;
+}
+
+.latest-asset-row {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.15s;
+}
+
+.latest-asset-row:last-child {
+  border-bottom: none;
+}
+
+.latest-asset-row:hover {
+  background: var(--hover-bg);
+}
+
+.asset-cell {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.asset-cell-icon {
+  width: 32px;
+  color: var(--text-secondary);
+}
+
+.asset-cell-icon .octicon {
+  fill: currentColor;
+}
+
+.asset-cell-name {
+  word-break: break-all;
+}
+
+.asset-cell-name a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.asset-cell-name a:hover {
+  text-decoration: underline;
+}
+
+.asset-cell-size {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  width: 80px;
+}
+
+.asset-cell-date {
+  white-space: nowrap;
+  width: 120px;
+}
+
+.asset-cell-date a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+.asset-cell-date a:hover {
+  text-decoration: underline;
+}
+
+/* Latest Page Empty State */
+.latest-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .layout {
@@ -1321,5 +1510,26 @@ body.hide-assets .assets {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  /* Latest page responsive */
+  .latest-display-modes {
+    gap: 6px;
+  }
+
+  .display-mode-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .latest-assets-table th,
+  .asset-cell {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .asset-cell-size,
+  .asset-cell-date {
+    width: auto;
   }
 }

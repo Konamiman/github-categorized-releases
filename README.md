@@ -465,6 +465,25 @@ The root `multi-page` section allows enabling multi-page site generation. In thi
 Note that since pages will be loaded via JavaScript, multi-page sites can't be loaded locally via browser's "Open file" (these sites need to be served by a web server).
 
 
+### Latest page
+
+The optional root `latest-page` section enables a special page that aggregates all releases marked as "latest" across all categories. This provides a quick overview of the most recent stable releases.
+
+```yaml
+latest-page:
+  enable: true
+  title: "Latest Releases"              # Optional, defaults to "Latest"
+  description: "Most recent releases"   # Optional markdown description
+```
+
+The page offers two display modes:
+
+- **Releases**: Shows full release cards (same format as regular categories), with pagination in multi-page mode.
+- **Assets**: Shows a table of downloadable files from all latest releases, excluding source code archives. Assets can be sorted by date (ascending/descending) or name (A-Z/Z-A). Duplicate filenames across releases show only the most recent version.
+
+Note: Which releases are marked as "latest" is determined by the `latest-match` setting in each category. By default, this is the newest release in each category.
+
+
 ## GitHub markdown rendering
 
 By default, the script uses a local markdown renderer ([marked](https://www.npmjs.com/package/marked)) to convert release descriptions to HTML. This is fast but may not render some GitHub-specific markdown features correctly (e.g., certain emoji shortcodes, special syntax extensions).
