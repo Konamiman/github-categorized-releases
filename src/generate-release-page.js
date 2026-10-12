@@ -191,7 +191,9 @@ async function main() {
     console.error(`Error: site.max-releases must be false or a positive integer, got: ${maxReleases}`);
     process.exit(1);
   }
-  console.log('Fetching releases...' + (maxReleases !== false ? ` (limited to ${maxReleases})` : ''));
+  console.log('Fetching releases...'
+    + (maxReleases !== false ? ` (limited to ${maxReleases})` : '')
+    + (CONFIG.includeDrafts ? ' (including drafts)' : ''));
   const releaseData = await fetchAllReleases(maxReleases);
   let releases = releaseData.releases;
 

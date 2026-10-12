@@ -226,7 +226,11 @@ function generateReleaseHtml(release) {
   const prereleaseBadge = release.prerelease
     ? '<span class="badge prerelease">Pre-release</span>'
     : '';
+  const draftBadge = release.draft
+    ? '<span class="badge draft">Draft</span>'
+    : '';
   const prereleaseAttr = release.prerelease ? 'true' : 'false';
+  const draftAttr = release.draft ? 'true' : 'false';
 
   // GitHub link to see release on GitHub
   const githubLink = `
@@ -296,14 +300,15 @@ function generateReleaseHtml(release) {
   ` : '';
 
   // Badges HTML (only if there are any)
-  const badgesHtml = (latestBadge || prereleaseBadge) ? `
+  const badgesHtml = (latestBadge || prereleaseBadge || draftBadge) ? `
         <div class="release-badges">
           ${latestBadge}
           ${prereleaseBadge}
+          ${draftBadge}
         </div>` : '';
 
   return `
-    <div class="release-card" data-release-id="${release.id}" data-is-latest="${release.isLatest || false}" data-is-prerelease="${prereleaseAttr}">
+    <div class="release-card" data-release-id="${release.id}" data-is-latest="${release.isLatest || false}" data-is-prerelease="${prereleaseAttr}" data-is-draft="${draftAttr}">
       <div class="release-card-header" onclick="if(event.target.tagName !== 'A' && !event.target.closest('.release-github-link')) toggleReleaseCard(this.closest('.release-card'))">
         <div class="release-header-main">
           <div class="release-info">

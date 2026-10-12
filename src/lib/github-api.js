@@ -39,10 +39,20 @@ function loadReleasesFromFile(filePath) {
   const data = JSON.parse(content);
 
   // Support both { releases: [...] } and plain [...] formats
-  const releases = Array.isArray(data) ? data : data.releases;
+  let releases = Array.isArray(data) ? data : data.releases;
 
   if (!Array.isArray(releases)) {
     throw new Error(`Invalid releases file format: expected array or { releases: [...] }`);
+  }
+
+  // Skip draft releases (the file may contain them if it was saved with --include-drafts)
+  if (!CONFIG.includeDrafts) {
+    const beforeCount = releases.length;
+    releases = releases.filter(r => !r.draft);
+    const skippedDrafts = beforeCount - releases.length;
+    if (skippedDrafts > 0) {
+      console.log(`Skipped ${skippedDrafts} draft releases (use --include-drafts to include them)`);
+    }
   }
 
   // Use repository from file if not specified via CLI
@@ -93,11 +103,16 @@ async function fetchReleasesFromApi(maxReleases = false) {
     throw new Error('No repository specified. Use --repo option.');
   }
 
+  if (CONFIG.includeDrafts && !CONFIG.token) {
+    console.warn('Warning: --include-drafts was specified but no token was provided. GitHub only returns draft releases to users with push access to the repository, so no drafts will be fetched.');
+  }
+
   const [owner, repo] = CONFIG.repo.split('/');
   const releases = [];
   let page = 1;
   const perPage = 100;
   let totalCount = 0;
+  let skippedDrafts = 0;
   let oldestExistingRelease = null;
 
   while (true) {
@@ -122,6 +137,12 @@ async function fetchReleasesFromApi(maxReleases = false) {
     if (data.length === 0) break;
 
     for (const r of data) {
+      // The API only returns drafts to users with push access; skip them unless requested
+      if (r.draft && !CONFIG.includeDrafts) {
+        skippedDrafts++;
+        continue;
+      }
+
       totalCount++;
       oldestExistingRelease = r;
 
@@ -136,13 +157,18 @@ async function fetchReleasesFromApi(maxReleases = false) {
     page++;
   }
 
+  if (skippedDrafts > 0) {
+    console.log(`Skipped ${skippedDrafts} draft releases (use --include-drafts to include them)`);
+  }
+
   const mappedReleases = releases.map(r => {
     const uploadedAssets = (r.assets || []).map(a => ({
       name: a.name,
       url: a.browser_download_url,
       size: a.size
     }));
-    const sourceAssets = getSourceCodeAssets(CONFIG.repo, r.tag_name);
+    // Drafts have no tag yet, so the source code archive URLs wouldn't work
+    const sourceAssets = r.draft ? [] : getSourceCodeAssets(CONFIG.repo, r.tag_name);
 
     return {
       id: r.id,
@@ -152,7 +178,9 @@ async function fetchReleasesFromApi(maxReleases = false) {
       body: r.body || '',
       prerelease: r.prerelease,
       draft: r.draft,
-      publishedAt: r.published_at,
+      // Drafts have no publication date. Fall back to created_at (the date of the
+      // commit the release targets) so that sorting and cutoff dates work for them.
+      publishedAt: r.published_at || r.created_at,
       author: r.author ? {
         login: r.author.login,
         avatarUrl: r.author.avatar_url,
@@ -181,7 +209,7 @@ async function fetchReleasesFromApi(maxReleases = false) {
     listedCount: mappedReleases.length,
     oldestListedDate: oldestListed ? oldestListed.publishedAt : null,
     oldestListedUrl: oldestListed ? oldestListed.url : null,
-    oldestExistingDate: oldestExistingRelease ? oldestExistingRelease.published_at : null,
+    oldestExistingDate: oldestExistingRelease ? (oldestExistingRelease.published_at || oldestExistingRelease.created_at) : null,
     oldestExistingUrl: oldestExistingRelease ? oldestExistingRelease.html_url : null
   };
 }
@@ -201,11 +229,11 @@ async function fetchAllReleases(maxReleases = false) {
     // Load from local file
     releaseData = loadReleasesFromFile(CONFIG.releasesFile);
 
-    // Add source code assets to releases (now that CONFIG.repo is set)
+    // Add source code assets to releases (now that CONFIG.repo is set); drafts have no tag yet
     if (CONFIG.repo) {
       releaseData.releases = releaseData.releases.map(r => ({
         ...r,
-        assets: [...(r.assets || []), ...getSourceCodeAssets(CONFIG.repo, r.tag)]
+        assets: [...(r.assets || []), ...(r.draft ? [] : getSourceCodeAssets(CONFIG.repo, r.tag))]
       }));
     }
 

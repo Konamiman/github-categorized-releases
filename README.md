@@ -140,7 +140,7 @@ For more details on the script arguments, run `node src/generate-release-page.js
 
 If your repository doesn't get new releases often you can simply run the script manually (as in the quick start above) and host the resulting site in the repository itself (using GitHub Pages) or elsewhere.
 
-Running the script locally is also useful to experiment with the various settings available for the configuration file. When doing so you may want to use the `--save-releases` script argument to generate a local json file with information about all the existing releases, you can later use `--releases-file` to take this file as the source of releases information instead of querying the GitHub API every time (you first run the script once with `--repo` and `--save-releases`, and then as many times as you need with `--releases-file`).
+Running the script locally is also useful to experiment with the various settings available for the configuration file. When doing so you may want to use the `--save-releases` script argument to generate a local json file with information about all the existing releases, you can later use `--releases-file` to take this file as the source of releases information instead of querying the GitHub API every time (you first run the script once with `--repo` and `--save-releases`, and then as many times as you need with `--releases-file`). If you want the saved file to contain draft releases too, add `--include-drafts` to the `--save-releases` run (see [Draft releases](#draft-releases)).
 
 For repositories that get frequent releases, or when running the script locally isn't convenient for whatever reason, offloading the generation of the page to a GitHub action that fires whenever a new release is published (or an existing release changes) and publishes the generated site in GitHub Pages is a better option, and that's what the remaining scenarios discuss.
 
@@ -366,7 +366,7 @@ Some settings accept local file paths that can be absolute or relative. Relative
 
 The root `categories` section configures which release categories exist and how releases are categorized. Each category containing at least one release gets an entry in the left sidebar of the generated site.
 
-A release can be included in zero, one, or multiple categories based on one or more _matchers_. A matcher is a regular expression that applies to the release tag, title, body or list of assets (negative matchers exist too). There are also two boolean matchers: "is prerelease" and "is latest".
+A release can be included in zero, one, or multiple categories based on one or more _matchers_. A matcher is a regular expression that applies to the release tag, title, body or list of assets (negative matchers exist too). There are also three boolean matchers: "is prerelease", "is latest" and "is draft" (the latter is only useful when [draft releases are included](#draft-releases)).
 
 When more than one matcher is defined for a category they are evaluated together using AND logic (a release must match all the matchers in order to be included in the category); OR logic can be used by inserting a `match-any` group. There are also `match-all` groups, useful to be included inside `match-any`.
 
@@ -442,6 +442,8 @@ For repositories with a huge number of releases you may want to limit how many o
 
 By default, a "Latest" badge will be shown for the most recent release in each category. However this can be customized by adding a `latest-match` key in the category settings: it can be an array of matchers (all the matching releases will get the badge), `false` (no releases will get the badge at all) or `newest` (the default behavior).
 
+[Draft releases](#draft-releases) are never considered "the newest" release of a category (they aren't published yet), so with the default behavior the badge goes to the most recent non-draft release. Custom matchers can still match drafts explicitly if that's what you want.
+
 
 ### Category settings defaults and inheritance
 
@@ -516,6 +518,18 @@ GitHub strips unknown HTML tags when rendering markdown, so the content between 
 You can customize the tag name via `site.hide-tag` in the config file, or set it to `false` to disable this feature.
 
 
+## Draft releases
+
+By default only published releases are included in the generated site. If you want draft releases to be included too, use the `--include-drafts` script flag or set `include-drafts: true` in the action. Keep in mind:
+
+- GitHub only returns draft releases to users with push access to the repository, so the token used must have that permission. When using the action this means the workflow job needs `contents: write` (the standard "upload artifacts" and "deploy to Pages" workflow shown in [Scenario 2](#scenario-2-new-github-pages-site-repository-not-using-pages-yet) uses `contents: read`, so drafts won't be fetched with it). The script prints a warning if `--include-drafts` is used without a token.
+- Drafts are displayed with a "Draft" badge. Since they have no publication date, the date of the commit they target is used instead for display, sorting and `cutoff-date` purposes.
+- Drafts are never considered "the newest" release of a category, see ["Latest" matching](#latest-matching).
+- Draft releases don't have a tag yet, so no "Source code" assets are listed for them. Also, the link to the release in GitHub and the links to any uploaded assets will only work for users with push access to the repository.
+- The `is-draft` boolean matcher can be used to put drafts in their own category, or to exclude them from other categories.
+- When using `--releases-file`, drafts present in the file are still skipped unless `--include-drafts` is specified.
+
+
 ## GitHub markdown rendering
 
 By default, the script uses a local markdown renderer ([marked](https://www.npmjs.com/package/marked)) to convert release descriptions to HTML. This is fast but may not render some GitHub-specific markdown features correctly (e.g., certain emoji shortcodes, special syntax extensions).
@@ -532,6 +546,7 @@ If you need pixel-perfect rendering matching GitHub's display, use the `--github
 | `config` | Path to configuration file | `.github/categorized-releases/config.yaml` |
 | `output` | Output directory for generated site | `_site` |
 | `github-markdown` | Use GitHub API for markdown rendering | `false` |
+| `include-drafts` | Include draft releases (requires a token with push access) | `false` |
 
 
 ## CLI options reference
@@ -546,6 +561,7 @@ Either `--repo` or `--releases-file` is required.
 --output <dir>          Output directory (default: _site)
 --save-releases <path>  Fetch ALL releases and save to JSON (config not used, no page generated)
 --github-markdown       Use GitHub API for markdown rendering (slower but more accurate)
+--include-drafts        Include draft releases (requires a token with push access)
 --help                  Show help
 ```
 

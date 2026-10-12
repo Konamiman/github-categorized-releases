@@ -24,6 +24,8 @@ Options:
                           (config file not used, no page generated)
   --github-markdown       Use GitHub API for markdown rendering instead of local code
                           (slower but more similar to GitHub's own rendering)
+  --include-drafts        Include draft releases (requires a token with push access
+                          to the repository; drafts are excluded by default)
   --help                  Show this help message
 
 Examples:
@@ -60,7 +62,8 @@ function parseArgs() {
     outputDir: '_site',
     releasesFile: null,
     saveReleasesFile: null,
-    useGitHubMarkdown: false
+    useGitHubMarkdown: false,
+    includeDrafts: false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -85,6 +88,9 @@ function parseArgs() {
         break;
       case '--github-markdown':
         config.useGitHubMarkdown = true;
+        break;
+      case '--include-drafts':
+        config.includeDrafts = true;
         break;
       case '--help':
       case '-h':
