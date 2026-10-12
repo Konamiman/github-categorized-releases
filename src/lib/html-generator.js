@@ -438,11 +438,11 @@ function generateSidebarCategoryHtml(category, config, depth = 0) {
 
   return `
     <li class="nav-item${hasChildren ? ' has-children' : ''}" data-category-id="${categoryId}">
-      <div class="nav-link"${tooltipAttr} onclick="selectCategory('${categoryId}')">
+      <button type="button" class="nav-link"${tooltipAttr} onclick="selectCategory('${categoryId}')">
         ${expandIcon}
         <span class="nav-name">${escapeHtml(category.name)}</span>
         <span class="nav-count" data-count-all="${counts.all}" data-count-nopre="${counts.nopre}" data-count-latest="${counts.latest}" data-count-latestnopre="${counts.latestnopre}">${counts.all}</span>
-      </div>
+      </button>
       ${childrenHtml}
     </li>
   `;
@@ -774,14 +774,14 @@ async function generateFullHtml(tree, unmatchedReleases, config, defaultMaxDispl
   // Generate Index entry for main page
   const indexSidebarHtml = hasMainPage ? `
     <li class="nav-item" data-category-id="index">
-      <div class="nav-link" onclick="selectCategory('index')">
+      <button type="button" class="nav-link" onclick="selectCategory('index')">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
             <path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"></path>
           </svg>
         </span>
         <span class="nav-name">Index</span>
-      </div>
+      </button>
     </li>
   ` : '';
 
@@ -792,7 +792,7 @@ async function generateFullHtml(tree, unmatchedReleases, config, defaultMaxDispl
 
   const latestSidebarHtml = showLatestPage ? `
     <li class="nav-item" data-category-id="latest-page">
-      <div class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
+      <button type="button" class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
             <path fill="currentColor" d="M8 1a7 7 0 0 1 7 7h-1.5A5.5 5.5 0 0 0 8 2.5V1Zm7 7a7 7 0 0 1-7 7v-1.5A5.5 5.5 0 0 0 13.5 8H15ZM8 15a7 7 0 0 1-7-7h1.5A5.5 5.5 0 0 0 8 13.5V15Z"/>
@@ -802,7 +802,7 @@ async function generateFullHtml(tree, unmatchedReleases, config, defaultMaxDispl
         </span>
         <span class="nav-name">${escapeHtml(latestPageTitle)}</span>
         <span class="nav-count">${latestReleases.length}/${latestAssets.length}</span>
-      </div>
+      </button>
     </li>
   ` : '';
 
@@ -1119,14 +1119,16 @@ async function generateFullHtml(tree, unmatchedReleases, config, defaultMaxDispl
     const categoryData = ${JSON.stringify(allCategories)};
     const categoryReleasesHtml = ${JSON.stringify(categoryReleasesHtml)};
     const categoryDescriptionsHtml = ${JSON.stringify(categoryDescriptionsHtml)};
+    // Index if exists, otherwise first category
+    const defaultCategoryId = ${JSON.stringify(firstCategoryId)};
   </script>
   <script src="script.js"></script>
   <script>
     // Apply URL params and select initial category
     applyUrlParams();
     const initialHash = window.location.hash.slice(1);
-    // No hash or invalid hash -> use default (index if exists, otherwise first category)
-    selectCategory(initialHash && categoryData[initialHash] ? initialHash : '${firstCategoryId}');
+    // No hash or invalid hash -> use default
+    selectCategory(initialHash && categoryData[initialHash] ? initialHash : defaultCategoryId);
     updateSidebarCounts();
   </script>
 </body>
@@ -1186,21 +1188,21 @@ async function prepareMultiPageData(tree, unmatchedReleases, config, defaultMaxD
   // Generate Index entry for main page
   const indexSidebarHtml = hasMainPage ? `
     <li class="nav-item" data-category-id="index">
-      <div class="nav-link" onclick="selectCategory('index')">
+      <button type="button" class="nav-link" onclick="selectCategory('index')">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
             <path d="M0 1.75A.75.75 0 0 1 .75 1h4.253c1.227 0 2.317.59 3 1.501A3.743 3.743 0 0 1 11.006 1h4.245a.75.75 0 0 1 .75.75v10.5a.75.75 0 0 1-.75.75h-4.507a2.25 2.25 0 0 0-1.591.659l-.622.621a.75.75 0 0 1-1.06 0l-.622-.621A2.25 2.25 0 0 0 5.258 13H.75a.75.75 0 0 1-.75-.75Zm7.251 10.324.004-5.073-.002-2.253A2.25 2.25 0 0 0 5.003 2.5H1.5v9h3.757a3.75 3.75 0 0 1 1.994.574ZM8.755 4.75l-.004 7.322a3.752 3.752 0 0 1 1.992-.572H14.5v-9h-3.495a2.25 2.25 0 0 0-2.25 2.25Z"></path>
           </svg>
         </span>
         <span class="nav-name">Index</span>
-      </div>
+      </button>
     </li>
   ` : '';
 
   // Generate Latest page sidebar entry
   const latestSidebarHtml = showLatestPage ? `
     <li class="nav-item" data-category-id="latest-page">
-      <div class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
+      <button type="button" class="nav-link" onclick="selectCategory('latest-page')" title="${latestReleases.length} releases / ${latestAssets.length} assets">
         <span class="nav-icon">
           <svg class="octicon" viewBox="0 0 16 16" width="16" height="16">
             <path fill="currentColor" d="M8 1a7 7 0 0 1 7 7h-1.5A5.5 5.5 0 0 0 8 2.5V1Zm7 7a7 7 0 0 1-7 7v-1.5A5.5 5.5 0 0 0 13.5 8H15ZM8 15a7 7 0 0 1-7-7h1.5A5.5 5.5 0 0 0 8 13.5V15Z"/>
@@ -1210,7 +1212,7 @@ async function prepareMultiPageData(tree, unmatchedReleases, config, defaultMaxD
         </span>
         <span class="nav-name">${escapeHtml(latestPageTitle)}</span>
         <span class="nav-count">${latestReleases.length}/${latestAssets.length}</span>
-      </div>
+      </button>
     </li>
   ` : '';
 

@@ -433,7 +433,7 @@ function toggleTruncationInfo(btn) {
       </div>
     </div>
     <div class="popup-section">
-      <div class="popup-label">Releases in "${categoryName}" category:</div>
+      <div class="popup-label">Releases in "<span class="popup-category-name"></span>" category:</div>
       <div class="popup-indent">
         <div class="popup-row">
           <span>Matching:</span>
@@ -466,6 +466,7 @@ function toggleTruncationInfo(btn) {
   }
 
   popupContent.innerHTML = html;
+  popupContent.querySelector('.popup-category-name').textContent = categoryName;
   popup.classList.add('show');
 
   function closeOnClickOutside(e) {
@@ -554,6 +555,7 @@ if (document.readyState === 'loading') {
 // Latest Page Display Modes
 // ============================================================================
 
+const LATEST_DISPLAY_MODES = ['releases', 'assets-date-desc', 'assets-date-asc', 'assets-name-asc', 'assets-name-desc'];
 let currentLatestDisplayMode = 'releases';
 
 function setLatestDisplayMode(mode) {

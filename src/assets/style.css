@@ -220,17 +220,28 @@ body {
 .nav-link {
   display: flex;
   align-items: center;
+  width: 100%;
+  margin: 0;
   padding: 8px 16px;
   cursor: pointer;
+  font: inherit;
   font-size: 14px;
+  text-align: left;
   color: var(--text-color);
   text-decoration: none;
+  background: none;
+  border: none;
   border-left: 2px solid transparent;
   transition: background-color 0.15s, border-color 0.15s;
 }
 
 .nav-link:hover {
   background: var(--hover-bg);
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: -2px;
 }
 
 .nav-item.selected > .nav-link {
@@ -265,7 +276,7 @@ body {
 }
 
 .nav-icon .octicon {
-  fill: currentColor;
+  fill: currentcolor;
   width: 14px;
   height: 14px;
 }
@@ -473,17 +484,11 @@ body {
   color: var(--text-color);
 }
 
-.release-toggle .chevron-down {
-}
-
 .release-card.collapsed .release-toggle .chevron-down {
   transform: rotate(-90deg);
 }
 
 /* Collapsible content */
-.release-content {
-}
-
 .release-card.collapsed .release-content {
   display: none;
 }
@@ -591,7 +596,7 @@ body {
 }
 
 .release-tag {
-  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 13px;
 }
 
@@ -616,7 +621,7 @@ body {
 }
 
 .octicon {
-  fill: currentColor;
+  fill: currentcolor;
   flex-shrink: 0;
 }
 
@@ -937,7 +942,7 @@ body {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
-  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 .category-description pre {
@@ -1368,7 +1373,7 @@ body.hide-assets .assets {
 }
 
 .display-mode-btn .octicon {
-  fill: currentColor;
+  fill: currentcolor;
 }
 
 .display-mode-divider {
@@ -1452,7 +1457,7 @@ body.latest-page-active .filter-group:has(#showAssets) {
 }
 
 .asset-cell-icon .octicon {
-  fill: currentColor;
+  fill: currentcolor;
 }
 
 .asset-cell-name {
@@ -1513,7 +1518,7 @@ body.latest-page-active .filter-group:has(#showAssets) {
     padding: 20px;
   }
 
-  .content-header {
+  .content-header-top {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
