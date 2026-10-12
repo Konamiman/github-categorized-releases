@@ -72,7 +72,7 @@ function applyUrlParams() {
   // Restore display mode for latest-page
   if (params.has('mode') && typeof setLatestDisplayMode === 'function') {
     const mode = params.get('mode');
-    if (['releases', 'assets-date-desc', 'assets-date-asc', 'assets-name-asc', 'assets-name-desc'].includes(mode)) {
+    if (LATEST_DISPLAY_MODES.includes(mode)) {
       // Will be applied after category loads
       window.pendingLatestDisplayMode = mode;
     }

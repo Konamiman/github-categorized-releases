@@ -70,6 +70,12 @@ function testMatcher(release, matcher) {
     if (release.prerelease !== matcher['is-prerelease']) return false;
   }
 
+  // is-draft (drafts are only present when running with --include-drafts;
+  // releases loaded from older saved files may lack the flag entirely)
+  if (matcher['is-draft'] !== undefined) {
+    if ((release.draft === true) !== matcher['is-draft']) return false;
+  }
+
   // is-latest (requires release.isLatest to be set before matching)
   if (matcher['is-latest'] !== undefined) {
     if (release.isLatest !== matcher['is-latest']) return false;
@@ -84,7 +90,7 @@ const SIMPLE_MATCHER_KEYS = [
   'tag', 'tag-not',
   'body', 'body-not',
   'assets', 'assets-not',
-  'is-prerelease', 'is-latest'
+  'is-prerelease', 'is-latest', 'is-draft'
 ];
 
 /**

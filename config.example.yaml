@@ -202,6 +202,8 @@ unmatched:
 #   assets-not: "regex"   - Exclude if assets match
 #   is-prerelease: true   - Match prerelease flag (true/false)
 #   is-latest: true       - Match GitHub's "latest" flag (true/false)
+#   is-draft: true        - Match draft flag (true/false). Drafts are only
+#                           fetched when running with --include-drafts
 #
 # COMPOUND MATCHERS (can be nested):
 #   match-any: [...]      - At least one must match (OR logic)

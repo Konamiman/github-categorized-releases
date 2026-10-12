@@ -80,6 +80,8 @@ function filterByCutoffDate(releases, cutoffDate) {
  *   - "newest": only the newest release gets the badge
  *   - null/undefined: same as "newest"
  *   - Array: custom matchers
+ * Draft releases are never considered "the newest" (they aren't published yet),
+ * but they can still be matched explicitly by custom matchers.
  * @returns {Array} - Array of release IDs that should be marked as latest
  */
 function findLatestReleases(releases, latestMatch) {
@@ -88,14 +90,17 @@ function findLatestReleases(releases, latestMatch) {
   // false = no latest badge
   if (latestMatch === false) return [];
 
+  // The newest release is the first non-draft one (releases are sorted newest first)
+  const newestIndex = releases.findIndex(r => !r.draft);
+
   // null/undefined/"newest" = newest release only
   if (latestMatch === null || latestMatch === undefined || latestMatch === 'newest') {
-    return [releases[0].id];
+    return newestIndex === -1 ? [] : [releases[newestIndex].id];
   }
 
   // Array of matchers - find all matching releases
   // First, temporarily mark the newest as latest for is-latest matcher to work
-  const tempReleases = releases.map((r, i) => ({ ...r, isLatest: i === 0 }));
+  const tempReleases = releases.map((r, i) => ({ ...r, isLatest: i === newestIndex }));
 
   const latestIds = [];
   for (const release of tempReleases) {
